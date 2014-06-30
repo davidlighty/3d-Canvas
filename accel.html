@@ -37,7 +37,14 @@
            box-shadow: 0 8px 6px -6px black;
         }
         .gl-scene{
-             box-shadow: inset 0 0 30px #000000;
+            background:rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 30px #000000;
+            margin-bottom: 100px;
+            position: relative;
+        }
+        .gl-scene canvas{
+            position: relative;
+            bottom:-55px;
         }
         </style>
     </head>
@@ -57,7 +64,7 @@
         </div>
         <!-- Begin page content -->
         <section class="gl-scene">
-            <canvas id="3d-canvas" style="border: none;z-index:1;" width=800 height=500></canvas>
+            <canvas id="3d-canvas" style="border: none;z-index:1;" width=800 height=200></canvas>
         </section>
         <div class="container">
             <div class="page-header empty">
@@ -72,9 +79,10 @@
                         <button id="rot-z" class="btn btn-default btn-lg">Z</button>
                     </label>
                 </div>
+                <hr/>
                 <div>
                     <label>Z-Axis
-                        <input id="zaxis" type="range" min="1" max="100" step=".10" />
+                        <input id="zaxis" type="range" min="1" max="20" step=".10" />
                     </label>
                 </div>
             </section>

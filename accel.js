@@ -9,7 +9,7 @@
 var logging = true;
 var gl;
 var canvas;
-var triangle;
+var pyramid;
 // Rotation
 var autoRotate = false;
 var theRotatingAxis;
@@ -116,7 +116,7 @@ function initBuffers(obj) {
 }
 
 function drawScene(objs) {
-    gl.clearColor(0.05, 0.05, 0.05, 0.80);
+    gl.clearColor(0.05, 0.05, 0.05, 0.00);
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
@@ -200,41 +200,68 @@ var drawableObj = function(params) {
     return o;
 };
 // Create a square
-function initSquare() {
-    var squareObj = new drawableObj({
-        buffer: null,
-        vertices: [
-            1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
-            1.0, -1.0, 0.0, -1.0, -1.0, 0.0
-        ],
-        position: [3.0, 0.0, -3.0],
-        axis: 3,
-        points: 4,
-        gl_array_type: gl.TRIANGLE_STRIP
-    });
-    return squareObj;
-}
-// Create a triangle
+// function initSquare() {
+//     var squareObj = new drawableObj({
+//         buffer: null,
+//         vertices: [
+//             1.0, 1.0, 0.0, -1.0, 1.0, 0.0,
+//             1.0, -1.0, 0.0, -1.0, -1.0, 0.0
+//         ],
+//         position: [3.0, 0.0, -3.0],
+//         axis: 3,
+//         points: 4,
+//         gl_array_type: gl.TRIANGLE_STRIP
+//     });
+//     return squareObj;
+// }
+// Create a pyramid
 function makeTriangle() {
-    var triangleObj = new drawableObj({
+    var pyramidObj = new drawableObj({
         vertices: [
-            0.0, 1.0, 0.0, -1.0, -1.0, 0.0,
-            1.0, -1.0, 0.0
+         // Front face
+         0.0,  0.8,  0.0,
+        -1.0, -1.0,  1.0,
+         1.0, -1.0,  1.0,
+        // // Right face
+         0.0,  0.8,  0.0,
+         1.0, -1.0,  1.0,
+         1.0, -1.0, -1.0,
+        // Back face
+         0.0,  0.8,  0.0,
+         1.0, -1.0, -1.0,
+        -1.0, -1.0, -1.0,
+        // Left face
+         0.0,  0.8,  0.0,
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0,  1.0
         ],
-        position: [-0.5, 0.0, -5.0],
+        position: [1.5, 0.0, 1.0],
         axis: 3,
-        points: 3,
+        points: 12,		// 4 sides x 3 points
         rotation: 0,
         gl_array_type: gl.TRIANGLES,
         colors: [
-            1.0, 0.0, 0.30, 1.0,
-            0.0, 1.0, 0.0, 1.0,
-            0.30, 0.0, 1.0, 0.80
+        // Front face
+        1.0, 0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0, 1.0,
+        0.0, 0.0, 1.0, 1.0,
+        // Right face
+        1.0, 0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0, 1.0,
+        0.0, 1.0, 0.0, 1.0,
+        // Back face
+        1.0, 0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0, 1.0,
+        0.0, 0.0, 1.0, 1.0,
+        // Left face
+        1.0, 0.0, 0.0, 1.0,
+        0.0, 0.0, 1.0, 1.0,
+        0.0, 1.0, 0.0, 1.0
         ],
         colorLen: 4,
-        colorRows: 3
+        colorRows: 12
     });
-    return triangleObj;
+    return pyramidObj;
 }
 //////////////////// OBJECTS ///////////////////////////
 //
@@ -244,25 +271,23 @@ var makeScene = function() {
     // Get current z-Index
     var zIdx = $('#zaxis').val() * -1;
     var position = [-1.5, 0.0, zIdx];
-    triangle.setStartPOS(position);
+    pyramid.setStartPOS(position);
     logIt('zIdx', zIdx);
     // Rotation
     var rotation = parseInt($('#rot').val());
     if (autoRotate) {
-        logIt('triangle', triangle);
-        rotation = triangle.rotation + 1;
+        logIt('pyramid', pyramid);
+        rotation = pyramid.rotation + 1;
     }
     logIt('rotation', rotation);
-    triangle.setRotation(rotation);
-    triangle.setGLArrayType(gl.TRIANGLES);
-    triangle.makeBuffer();
-    drawScene([triangle]);
+    pyramid.setRotation(rotation);
+    pyramid.setGLArrayType(gl.TRIANGLES);
+    pyramid.makeBuffer();
+    drawScene([pyramid]);
 };
 var mainloop = function() {
     makeScene();
 };
-// Browser Compat Check
-var animFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
 //////////////////// DRAW LOOP /////////////////////////
 //
 //////////////////// MISC FUNC /////////////////////////
@@ -283,9 +308,11 @@ $(document).ready(function() {
     // Init our WebGL Scene
     webGLStart();
     // Create our obj
-    triangle = makeTriangle();
+    pyramid = makeTriangle();
     setRotation();
     // Start our rendering loop
+    // Browser Compat Check
+	var animFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
     if (animFrame !== null) {
         var recursiveAnim = function() {
             mainloop();
@@ -297,12 +324,14 @@ $(document).ready(function() {
         var ONE_FRAME_TIME = 1000.0 / 60.0;
         setInterval(mainloop, ONE_FRAME_TIME);
     }
+
+    // Command Events
     $('#auto-rotate').click(function() {
         // Begin auto-rotate
         autoRotate = !autoRotate;
     });
     $('#rot-x').click(function() {
-        x ^= 1;
+        x ^= 1; // Bitwise to flip axis on/off.
         setRotation();
     });
     $('#rot-y').click(function() {
