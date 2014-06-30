@@ -1,0 +1,93 @@
+<html>
+    <head>
+        <title>Accelerometer Demo with WebGL</title>
+        <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+        <link rel="stylesheet" type="text/css" href="bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="bootstrap-theme.css">
+        <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+        <script id="shader-fs" type="x-shader/x-fragment">
+                    precision mediump float;
+                    varying vec4 vColor;
+                    void main(void) {
+                        gl_FragColor = vColor;
+                    }
+        </script>
+        <script id="shader-vs" type="x-shader/x-vertex">
+                    attribute vec3 aVertexPosition;
+                    attribute vec4 aVertexColor;
+                    uniform mat4 uMVMatrix;
+                    uniform mat4 uPMatrix;
+                    varying vec4 vColor;
+                    void main(void) {
+                        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+                        vColor = aVertexColor;
+                    }
+        </script>
+        <style type="text/css">
+        #commands{
+           position:absolute;
+           top:150px;
+           right:50px;
+           max-width:45%;
+           background:rgba(0,0,0,0.8);
+           z-index:1;
+           color:#fff;
+           padding:10px;
+           border-radius:5px;
+           box-shadow: 0 8px 6px -6px black;
+        }
+        .gl-scene{
+             box-shadow: inset 0 0 30px #000000;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="#">Accelerometer Demo with WebGL</a>
+                </div>
+            </div>
+        </div>
+        <!-- Begin page content -->
+        <section class="gl-scene">
+            <canvas id="3d-canvas" style="border: none;z-index:1;" width=800 height=500></canvas>
+        </section>
+        <div class="container">
+            <div class="page-header empty">
+            </div>
+            <section id="commands">
+                <div>
+                    <label>Rotation <small id="rot-current"></small>
+                        <input id="rot" type="range" min="1" max="360" step=".60" />
+                        <button id="auto-rotate" class="btn btn-default btn-lg">Auto</button>
+                        <button id="rot-x" class="btn btn-default btn-lg">X</button>
+                        <button id="rot-y" class="btn btn-default btn-lg">Y</button>
+                        <button id="rot-z" class="btn btn-default btn-lg">Z</button>
+                    </label>
+                </div>
+                <div>
+                    <label>Z-Axis
+                        <input id="zaxis" type="range" min="1" max="100" step=".10" />
+                    </label>
+                </div>
+            </section>
+        </div>
+        <div class="footer">
+            <div class="container">
+                <p class="text-muted">&copy 2014 David Lighty</p>
+            </div>
+        </div>
+        <script type="text/javascript" src="jquery.js">
+        </script>
+        <script type="text/javascript" src="bootstrap.js"></script>
+        <script type="text/javascript" src="accel.js">
+        </script>
+    </body>
+</html>
