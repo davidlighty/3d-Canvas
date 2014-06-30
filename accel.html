@@ -26,7 +26,7 @@
         <style type="text/css">
         #commands{
            position:absolute;
-           top:150px;
+           top:70px;
            right:50px;
            max-width:45%;
            background:rgba(0,0,0,0.8);
@@ -35,6 +35,9 @@
            padding:10px;
            border-radius:5px;
            box-shadow: 0 8px 6px -6px black;
+        }
+        #commands label{
+            width:100%;
         }
         .gl-scene{
             background:rgba(0,0,0,0.8);
@@ -83,7 +86,17 @@
                 <div>
                     <label>Z-Axis
                         <input id="zaxis" type="range" min="1" max="20" step=".10" />
+                    </label><br/>
+                    <label>Y-Axis
+                        <input id="yaxis" type="range" min="-1" max="1" step=".05" value="0" />
+                    </label><br/>
+                    <label>X-Axis
+                        <input id="xaxis" type="range" min="-1" max="1" step=".05" value="-1" />
                     </label>
+                    <div style="display:none;">
+                       <button id="center" class="btn btn-default btn-lg">Center</button> 
+                    </div>
+                    
                 </div>
             </section>
         </div>

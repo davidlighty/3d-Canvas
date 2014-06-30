@@ -6,7 +6,7 @@
 */
 //
 //////////////////// WEBGL /////////////////////////////
-var logging = true;
+var logging = false;
 var gl;
 var canvas;
 var pyramid;
@@ -270,7 +270,9 @@ var makeScene = function() {
     logIt('makeScene');
     // Get current z-Index
     var zIdx = $('#zaxis').val() * -1;
-    var position = [-1.5, 0.0, zIdx];
+    var yIdx = $('#yaxis').val() * 1;
+    var xIdx = $('#xaxis').val() * 1;
+    var position = [xIdx, yIdx, zIdx];
     pyramid.setStartPOS(position);
     logIt('zIdx', zIdx);
     // Rotation
@@ -326,6 +328,12 @@ $(document).ready(function() {
     }
 
     // Command Events
+    $('#center').click(function(){
+    	logIt('Center');
+    	    $('#zaxis').val=0;
+    		$('#zyaxis').val=0;
+    		$('#xaxis').val=0;
+    });
     $('#auto-rotate').click(function() {
         // Begin auto-rotate
         autoRotate = !autoRotate;
@@ -342,6 +350,7 @@ $(document).ready(function() {
         z ^= 1;
         setRotation();
     });
+
 });
 // Set Canvas size.
 //$(window).resize( respondCanvas );
