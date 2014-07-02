@@ -9,6 +9,10 @@
 var logging = false;
 var gl;
 var canvas;
+var mvMatrix = mat4.create();
+var mvMatrixStack = [];
+var pMatrix = mat4.create();
+
 var pyramid;
 // Rotation
 var autoRotate = false;
@@ -25,9 +29,9 @@ function initGL(canvas) {
             window.location = "http://get.webgl.org";
         } else {
             gl = canvas.getContext("webgl");
-            if(!gl){
-            	alert('Failed to getContext.');
-            	return;
+            if (!gl) {
+                alert('Failed to getContext.');
+                return;
             }
             gl.viewportWidth = canvas.width;
             gl.viewportHeight = canvas.height;
@@ -99,20 +103,22 @@ function initShaders() {
 var mvMatrix = mat4.create();
 var pMatrix = mat4.create();
 
+function mvPushMatrix() {
+    var copy = mat4.create();
+    mat4.set(mvMatrix, copy);
+    mvMatrixStack.push(copy);
+}
+
+function mvPopMatrix() {
+    if (mvMatrixStack.length === 0) {
+        throw 'Invalid popMatrix!';
+    }
+    mvMatrix = mvMatrixStack.pop();
+}
+
 function setMatrixUniforms() {
     gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-}
-
-function initBuffers(obj) {
-    // Draw Buffer
-    obj.buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(obj.vertices), gl.STATIC_DRAW);
-    // Color Buffer
-    obj.colorBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(obj.colors), gl.STATIC_DRAW);
 }
 
 function drawScene(objs) {
@@ -124,16 +130,7 @@ function drawScene(objs) {
     for (var i = objs.length - 1; i >= 0; i--) {
         var obj = objs[i];
         logIt('obj', obj);
-        mat4.translate(mvMatrix, obj.position);
-        mat4.rotate(mvMatrix, degToRad(obj.rotation), theRotatingAxis);
-        // Obj
-        gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, obj.axis, gl.FLOAT, false, 0, 0);
-        // Colors
-        gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, obj.colorLen, gl.FLOAT, false, 0, 0);
-        setMatrixUniforms();
-        gl.drawArrays(obj.gl_array_type, 0, obj.points);
+        obj.draw();
     }
 }
 
@@ -168,21 +165,50 @@ var drawableObj = function(params) {
         colorRows: 0,
         makeBuffer: function() {
             logIt('Make Buffer');
-            buffer = initBuffers(this);
+            // buffer = initBuffers(this);
+            this.buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+            // Color Buffer
+            this.colorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.colors), gl.STATIC_DRAW);
         },
         setGLArrayType: function(type) {
+        	logIt('setGLArrayType');
             this.gl_array_type = type;
         },
         setVerices: function(verts) {
-            logIt('Vertices', verts);
+            logIt('setVerices', verts);
             this.vertices = verts;
         },
-        setStartPOS: function(position) {
+        setPosition: function(position) {
+        	logIt('setPosition');
             logIt('position', position);
             this.position = position;
         },
         setRotation: function(rotation) {
+        	logIt('setRotation');
             this.rotation = rotation;
+        },
+        draw: function() {
+        	logIt('draw');
+        	//Push
+        	mvPushMatrix();
+
+	        mat4.translate(mvMatrix, this.position);
+	        mat4.rotate(mvMatrix, degToRad(this.rotation), theRotatingAxis);
+	        // Obj
+	        gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+	        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, this.axis, gl.FLOAT, false, 0, 0);
+	        // Colors
+	        gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+	        gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, this.colorLen, gl.FLOAT, false, 0, 0);
+	        setMatrixUniforms();
+	        gl.drawArrays(this.gl_array_type, 0, this.points);
+
+        	//Pop
+        	mvPopMatrix();
         },
         init: function(params) {
             logIt('Init Drawable Object');
@@ -215,48 +241,44 @@ var drawableObj = function(params) {
 //     return squareObj;
 // }
 // Create a pyramid
-function makeTriangle() {
+function makePyramid() {
     var pyramidObj = new drawableObj({
         vertices: [
-         // Front face
-         0.0,  0.8,  0.0,
-        -1.0, -1.0,  1.0,
-         1.0, -1.0,  1.0,
-        // // Right face
-         0.0,  0.8,  0.0,
-         1.0, -1.0,  1.0,
-         1.0, -1.0, -1.0,
-        // Back face
-         0.0,  0.8,  0.0,
-         1.0, -1.0, -1.0,
-        -1.0, -1.0, -1.0,
-        // Left face
-         0.0,  0.8,  0.0,
-        -1.0, -1.0, -1.0,
-        -1.0, -1.0,  1.0
+            // Front face
+            0.0, 0.8, 0.0, -1.0, -1.0, 1.0,
+            1.0, -1.0, 1.0,
+            // // Right face
+            0.0, 0.8, 0.0,
+            1.0, -1.0, 1.0,
+            1.0, -1.0, -1.0,
+            // Back face
+            0.0, 0.8, 0.0,
+            1.0, -1.0, -1.0, -1.0, -1.0, -1.0,
+            // Left face
+            0.0, 0.8, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, 1.0
         ],
         position: [1.5, 0.0, 1.0],
         axis: 3,
-        points: 12,		// 4 sides x 3 points
+        points: 12, // 4 sides x 3 points
         rotation: 0,
         gl_array_type: gl.TRIANGLES,
         colors: [
-        // Front face
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        // Right face
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        // Back face
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        // Left face
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0,
-        0.0, 1.0, 0.0, 1.0
+            // Front face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            // Right face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            // Back face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            // Left face
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0,
+            0.0, 1.0, 0.0, 1.0
         ],
         colorLen: 4,
         colorRows: 12
@@ -273,7 +295,7 @@ var makeScene = function() {
     var yIdx = $('#yaxis').val() * 1;
     var xIdx = $('#xaxis').val() * 1;
     var position = [xIdx, yIdx, zIdx];
-    pyramid.setStartPOS(position);
+    pyramid.setPosition(position);
     logIt('zIdx', zIdx);
     // Rotation
     var rotation = parseInt($('#rot').val());
@@ -310,11 +332,11 @@ $(document).ready(function() {
     // Init our WebGL Scene
     webGLStart();
     // Create our obj
-    pyramid = makeTriangle();
+    pyramid = makePyramid();
     setRotation();
     // Start our rendering loop
     // Browser Compat Check
-	var animFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
+    var animFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || null;
     if (animFrame !== null) {
         var recursiveAnim = function() {
             mainloop();
@@ -326,13 +348,12 @@ $(document).ready(function() {
         var ONE_FRAME_TIME = 1000.0 / 60.0;
         setInterval(mainloop, ONE_FRAME_TIME);
     }
-
     // Command Events
-    $('#center').click(function(){
-    	logIt('Center');
-    	    $('#zaxis').val=0;
-    		$('#zyaxis').val=0;
-    		$('#xaxis').val=0;
+    $('#center').click(function() {
+        logIt('Center');
+        $('#zaxis').val = 0;
+        $('#zyaxis').val = 0;
+        $('#xaxis').val = 0;
     });
     $('#auto-rotate').click(function() {
         // Begin auto-rotate
@@ -350,11 +371,10 @@ $(document).ready(function() {
         z ^= 1;
         setRotation();
     });
-
 });
 // Set Canvas size.
 //$(window).resize( respondCanvas );
 function respondCanvas() {
     $('canvas#3d-canvas').attr('width', $(window).width()); //max width
-    $('canvas#3d-canvas').attr('height', $(window).height()); //max height
+    // $('canvas#3d-canvas').attr('height', $(window).height()); //max height
 }

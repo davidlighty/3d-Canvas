@@ -46,8 +46,10 @@
             position: relative;
         }
         .gl-scene canvas{
+            border: none;
+            z-index:1;
             position: relative;
-            bottom:-55px;
+            bottom:-45px;
         }
         </style>
     </head>
@@ -67,7 +69,7 @@
         </div>
         <!-- Begin page content -->
         <section class="gl-scene">
-            <canvas id="3d-canvas" style="border: none;z-index:1;" width=800 height=200></canvas>
+            <canvas id="3d-canvas" width=800 height=400></canvas>
         </section>
         <div class="container">
             <div class="page-header empty">
